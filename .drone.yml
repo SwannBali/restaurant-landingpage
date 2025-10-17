@@ -48,7 +48,7 @@ steps:
       AWS_DEFAULT_REGION: us-east-1
     commands:
       - aws s3 cp public/ s3://restaurant-swann-preprod/ --recursive --acl public-read
-      - aws s3 cp restaurant-build-preprod-${DRONE_COMMIT_SHA:0:8}.zip s3://restaurant-swann-releases/preprod/
+      - aws s3 cp restaurant-build-preprod-${DRONE_COMMIT_SHA:0:8}.zip s3://restaurant-swann-releases/preprod/ --acl public-read
     when:
       event: push
       branch: master
@@ -66,7 +66,7 @@ steps:
     commands:
       - echo "Deploying to S3 prod"
       - aws s3 cp public/ s3://restaurant-swann/ --recursive --acl public-read
-      - aws s3 cp restaurant-build-prod-${DRONE_TAG}.zip s3://restaurant-swann-releases/prod/
+      - aws s3 cp restaurant-build-prod-${DRONE_TAG}.zip s3://restaurant-swann-releases/prod/ --acl public-read
     when:
       event: tag
       branch: master
