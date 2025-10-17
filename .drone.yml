@@ -21,7 +21,7 @@ steps:
         from_secret: aws_session_token
       AWS_DEFAULT_REGION: us-east-1
     commands:
-      - aws s3 cp public/ s3://restaurant-swann/ --recursive --acl public-read
+      - aws s3 cp public/ s3://restaurant-swann/ --recursive
     when:
       event: push
       branch: master
