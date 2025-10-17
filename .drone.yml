@@ -25,3 +25,50 @@ steps:
     when:
       event: push
       branch: master
+
+  - name: create-release
+    image: plugins/github-release:1
+    settings:
+      api_key:
+        from_secret: github_token
+      title: Release ${DRONE_TAG}
+      note: |
+        Release ${DRONE_TAG} du site restaurant
+        
+        ## Changements
+        - Site généré avec Hugo
+        - Artefacts disponibles dans S3
+        
+        ## Artefacts
+        - Site statique complet
+        - Images et assets optimisés
+      files:
+        - public/**/*
+      draft: false
+      prerelease: false
+    when:
+      event: tag
+
+  - name: upload-artifacts-to-s3
+    image: amazon/aws-cli:latest
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws_secret_access_key
+      AWS_SESSION_TOKEN:
+        from_secret: aws_session_token
+      AWS_DEFAULT_REGION: us-east-1
+    commands:
+      - echo "Création de l'archive pour le release ${DRONE_TAG}"
+      - mkdir -p releases
+      - tar -czf releases/restaurant-site-${DRONE_TAG}.tar.gz -C public .
+      - echo "Upload de l'archive vers S3"
+      - aws s3 cp releases/restaurant-site-${DRONE_TAG}.tar.gz s3://restaurant-swann/releases/ --acl public-read
+      - echo "Upload des fichiers individuels vers S3"
+      - aws s3 cp public/ s3://restaurant-swann/releases/${DRONE_TAG}/ --recursive --acl public-read
+      - echo "Création d'un fichier de métadonnées"
+      - echo "{\"version\":\"${DRONE_TAG}\",\"build_date\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"commit\":\"${DRONE_COMMIT_SHA}\"}" > releases/metadata.json
+      - aws s3 cp releases/metadata.json s3://restaurant-swann/releases/${DRONE_TAG}/metadata.json --acl public-read
+    when:
+      event: tag
