@@ -21,13 +21,6 @@ steps:
       event: tag
       branch: master
 
-  - name: hugo-build-dev
-    image: peaceiris/hugo:v0.65.3-mod
-    commands:
-      - hugo
-    when:
-      event: push
-      branch: [develop, feature/*, hotfix/*]
 
   - name: create-zip-archive
     image: alpine:latest
@@ -72,6 +65,7 @@ steps:
       AWS_DEFAULT_REGION: us-east-1
     commands:
       - echo "Deploying to S3 prod"
+      - aws s3 cp public/ s3://restaurant-swann/ --recursive --acl public-read
       - aws s3 cp restaurant-build-prod-${DRONE_TAG}.zip s3://restaurant-swann-releases/prod/
     when:
       event: tag
