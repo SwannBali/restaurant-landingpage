@@ -70,3 +70,69 @@ steps:
     when:
       event: tag
       branch: master
+
+---
+kind: pipeline
+name: promote-to-preprod
+steps:
+  - name: promote-to-preprod
+    image: amazon/aws-cli:latest
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws_secret_access_key
+      AWS_SESSION_TOKEN:
+        from_secret: aws_session_token
+      AWS_DEFAULT_REGION: us-east-1
+    commands:
+      - echo "Promoting build ${DRONE_PROMOTE_TARGET} to preprod"
+      - |
+        if [ "${DRONE_PROMOTE_TARGET}" != "" ]; then
+          # Télécharger le build depuis les releases
+          aws s3 cp s3://restaurant-swann-releases/preprod/restaurant-build-preprod-${DRONE_PROMOTE_TARGET}.zip ./build.zip
+          # Extraire le build
+          unzip build.zip -d ./extracted/
+          # Déployer vers preprod
+          aws s3 cp ./extracted/public/ s3://restaurant-swann-preprod/ --recursive --acl public-read
+          echo "Successfully promoted build ${DRONE_PROMOTE_TARGET} to preprod"
+        else
+          echo "No target specified for promotion"
+          exit 1
+        fi
+    when:
+      event: promote
+      target: preprod
+
+---
+kind: pipeline
+name: promote-to-prod
+steps:
+  - name: promote-to-prod
+    image: amazon/aws-cli:latest
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws_secret_access_key
+      AWS_SESSION_TOKEN:
+        from_secret: aws_session_token
+      AWS_DEFAULT_REGION: us-east-1
+    commands:
+      - echo "Promoting build ${DRONE_PROMOTE_TARGET} to prod"
+      - |
+        if [ "${DRONE_PROMOTE_TARGET}" != "" ]; then
+          # Télécharger le build depuis les releases
+          aws s3 cp s3://restaurant-swann-releases/prod/restaurant-build-prod-${DRONE_PROMOTE_TARGET}.zip ./build.zip
+          # Extraire le build
+          unzip build.zip -d ./extracted/
+          # Déployer vers prod
+          aws s3 cp ./extracted/public/ s3://restaurant-swann/ --recursive --acl public-read
+          echo "Successfully promoted build ${DRONE_PROMOTE_TARGET} to prod"
+        else
+          echo "No target specified for promotion"
+          exit 1
+        fi
+    when:
+      event: promote
+      target: prod
