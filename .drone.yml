@@ -7,7 +7,36 @@ name: hugo-website
 steps:
   - name: hugo-build
     image: peaceiris/hugo:v0.65.3-mod
-    environment:
-      <<: *hugo_env
     commands:
-      - hugo --baseURL $BASE_URL
+      - hugo --baseURL http://restaurant-swann.s3-website-us-east-1.amazonaws.com
+
+  - name: deploy-to-s3
+    image: amazon/aws-cli:latest
+    environment:
+      AWS_ACCESS_KEY_ID:
+        from_secret: aws_access_key_id
+      AWS_SECRET_ACCESS_KEY:
+        from_secret: aws_secret_access_key
+      AWS_SESSION_TOKEN:
+        from_secret: aws_session_token
+      AWS_DEFAULT_REGION: us-east-1
+      S3_BUCKET:
+        from_secret: s3_bucket_name
+    commands:
+      - aws s3 sync public/ s3://${S3_BUCKET} --delete
+      - aws s3 cp public/index.html s3://${S3_BUCKET}/index.html --content-type "text/html"
+    when:
+      event: push
+      branch: master
+
+  - name: display_urls
+    image: alpine:latest
+    environment:
+      S3_BUCKET:
+        from_secret: s3_bucket_name
+    commands:
+      - echo "🚀 Site déployé avec succès sur S3 !"
+      - echo "https://${S3_BUCKET}.s3-website-us-east-1.amazonaws.com"
+    when:
+      event: push
+      branch: master
