@@ -36,6 +36,7 @@ steps:
         from_secret: s3_bucket_name
     commands:
       - echo "🚀 Site déployé avec succès sur S3 !"
+      - echo "🚀 Site déployé avec succès sur S3 !"
       - echo "https://${S3_BUCKET}.s3-website-us-east-1.amazonaws.com"
     when:
       event: push
