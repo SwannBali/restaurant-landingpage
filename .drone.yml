@@ -20,24 +20,8 @@ steps:
       AWS_SESSION_TOKEN:
         from_secret: aws_session_token
       AWS_DEFAULT_REGION: us-east-1
-      S3_BUCKET:
-        from_secret: s3_bucket_name
     commands:
-      - aws s3 sync public/ s3://${S3_BUCKET} --delete
-      - aws s3 cp public/index.html s3://${S3_BUCKET}/index.html --content-type "text/html"
-    when:
-      event: push
-      branch: master
-
-  - name: display_urls
-    image: alpine:latest
-    environment:
-      S3_BUCKET:
-        from_secret: s3_bucket_name
-    commands:
-      - echo "🚀 Site déployé avec succès sur S3 !"
-      - echo "🚀 Site déployé avec succès sur S3 !"
-      - echo "https://${S3_BUCKET}.s3-website-us-east-1.amazonaws.com"
+      - aws s3 cp public/ s3://restaurant-swann/ --recursive --acl public-read
     when:
       event: push
       branch: master
