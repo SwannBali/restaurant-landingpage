@@ -71,6 +71,7 @@ steps:
         from_secret: aws_session_token
       AWS_DEFAULT_REGION: us-east-1
     commands:
+      - echo "Deploying to S3 prod"
       - aws s3 cp restaurant-build-prod-${DRONE_TAG}.zip s3://restaurant-swann-releases/prod/
     when:
       event: tag
